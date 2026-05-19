@@ -91,7 +91,8 @@ h1 {
 
 .hero-actions,
 .monitor-controls,
-.mode-options {
+.mode-options,
+.audio-actions {
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
@@ -101,6 +102,7 @@ h1 {
 .secondary-action,
 .monitor-controls button,
 .mode-options button,
+.audio-actions button,
 .alarm-overlay button {
   display: inline-flex;
   align-items: center;
@@ -125,7 +127,8 @@ h1 {
 
 .secondary-action,
 .monitor-controls button,
-.mode-options button {
+.mode-options button,
+.audio-actions button {
   background: #fffdf4;
   color: #17251e;
   border: 1px solid rgba(23, 37, 30, 0.14);
@@ -135,6 +138,7 @@ h1 {
 .secondary-action:hover,
 .monitor-controls button:not(:disabled):hover,
 .mode-options button:hover,
+.audio-actions button:not(:disabled):hover,
 .alarm-overlay button:hover {
   transform: translateY(-1px);
 }
@@ -240,12 +244,23 @@ h1 {
 }
 
 .control-strip {
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(220px, 0.8fr) minmax(160px, 0.5fr);
+  align-items: start;
   gap: 24px;
   max-width: 1180px;
   margin: 28px auto;
   padding: 22px;
+}
+
+.audio-controls {
+  display: grid;
+  gap: 8px;
+}
+
+.audio-controls small {
+  color: #5e6b62;
+  font-weight: 700;
 }
 
 .eyebrow {
@@ -402,7 +417,7 @@ h1 {
   }
 
   .control-strip {
-    flex-direction: column;
+    grid-template-columns: 1fr;
   }
 }
 
@@ -421,7 +436,8 @@ h1 {
 
   .hero-actions button,
   .mode-options button,
-  .monitor-controls button {
+  .monitor-controls button,
+  .audio-actions button {
     width: 100%;
   }
 

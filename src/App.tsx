@@ -4,13 +4,20 @@ import {
   Camera,
   CheckCircle2,
   Gauge,
+  RotateCcw,
   ShieldCheck,
   Smartphone,
   Volume2,
+  VolumeX,
 } from 'lucide-react'
 
 type AlarmMode = 'classic' | 'coach' | 'silent'
 type CameraState = 'idle' | 'starting' | 'active' | 'error' | 'unsupported'
+type AudioState = 'off' | 'ready' | 'muted' | 'unsupported'
+type ActiveTone = {
+  oscillator: OscillatorNode
+  gain: GainNode
+}
 
 const alarmModes: Record<AlarmMode, { label: string; message: string; tone: string }> = {
   classic: {
@@ -52,9 +59,12 @@ function App() {
   const videoRef = useRef<HTMLVideoElement | null>(null)
   const streamRef = useRef<MediaStream | null>(null)
   const alarmTimerRef = useRef<number | null>(null)
+  const audioContextRef = useRef<AudioContext | null>(null)
+  const activeToneRef = useRef<ActiveTone | null>(null)
   const [cameraState, setCameraState] = useState<CameraState>('idle')
   const [errorMessage, setErrorMessage] = useState('')
   const [alarmMode, setAlarmMode] = useState<AlarmMode>('classic')
+  const [audioState, setAudioState] = useState<AudioState>('off')
   const [detectionCount, setDetectionCount] = useState(0)
   const [alarmActive, setAlarmActive] = useState(false)
 
@@ -74,13 +84,33 @@ function App() {
 
     return () => {
       stopCamera()
+      stopAlarmTone()
       if (alarmTimerRef.current) window.clearTimeout(alarmTimerRef.current)
     }
   }, [])
 
+  function describeCameraError(error: unknown) {
+    if (error instanceof DOMException && error.name === 'NotAllowedError') {
+      return 'Camera permission blocked. Allow camera access in the browser, then retry camera.'
+    }
+
+    if (error instanceof Error && error.name === 'NotAllowedError') {
+      return 'Camera permission blocked. Allow camera access in the browser, then retry camera.'
+    }
+
+    if (error instanceof Error && error.name === 'NotFoundError') {
+      return 'No camera was found. Connect a camera or use the simulator path.'
+    }
+
+    return error instanceof Error
+      ? `Camera unavailable. ${error.message}`
+      : 'Camera unavailable. Permission was denied or the device could not be opened.'
+  }
+
   async function startCamera() {
     if (!navigator.mediaDevices?.getUserMedia) {
       setCameraState('unsupported')
+      setErrorMessage('Camera APIs are unavailable in this browser. Use a secure browser context or the simulator path.')
       return
     }
 
@@ -101,9 +131,7 @@ function App() {
       setCameraState('active')
     } catch (error) {
       setCameraState('error')
-      setErrorMessage(
-        error instanceof Error ? error.message : 'Camera permission was denied or unavailable.',
-      )
+      setErrorMessage(describeCameraError(error))
     }
   }
 
@@ -114,18 +142,84 @@ function App() {
     setCameraState((current) => (current === 'unsupported' ? 'unsupported' : 'idle'))
   }
 
+  async function enableAudioAlarm() {
+    const browserWindow = window as Window &
+      typeof globalThis & { webkitAudioContext?: typeof AudioContext }
+    const AudioContextConstructor = browserWindow.AudioContext ?? browserWindow.webkitAudioContext
+
+    if (!AudioContextConstructor) {
+      setAudioState('unsupported')
+      return
+    }
+
+    if (!audioContextRef.current) {
+      audioContextRef.current = new AudioContextConstructor()
+    }
+
+    await audioContextRef.current.resume().catch(() => undefined)
+    setAudioState('ready')
+  }
+
+  function muteAudioAlarm() {
+    stopAlarmTone()
+    setAudioState('muted')
+  }
+
+  function stopAlarmTone() {
+    if (!activeToneRef.current) return
+
+    try {
+      activeToneRef.current.oscillator.stop()
+    } catch {
+      // The tone may already have reached its scheduled stop time.
+    }
+    activeToneRef.current.oscillator.disconnect()
+    activeToneRef.current.gain.disconnect()
+    activeToneRef.current = null
+  }
+
+  async function playAlarmTone() {
+    if (audioState !== 'ready' || alarmMode === 'silent') return
+
+    const audioContext = audioContextRef.current
+    if (!audioContext) return
+
+    await audioContext.resume().catch(() => undefined)
+    stopAlarmTone()
+
+    const oscillator = audioContext.createOscillator()
+    const gain = audioContext.createGain()
+    const now = audioContext.currentTime
+
+    oscillator.type = 'sawtooth'
+    oscillator.frequency.setValueAtTime(alarmMode === 'coach' ? 660 : 880, now)
+    oscillator.frequency.exponentialRampToValueAtTime(alarmMode === 'coach' ? 440 : 620, now + 0.24)
+    gain.gain.setValueAtTime(0.0001, now)
+    gain.gain.exponentialRampToValueAtTime(0.18, now + 0.04)
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.8)
+
+    oscillator.connect(gain)
+    gain.connect(audioContext.destination)
+    oscillator.start(now)
+    oscillator.stop(now + 0.85)
+    activeToneRef.current = { oscillator, gain }
+  }
+
   function triggerAlarm() {
     setDetectionCount((count) => count + 1)
     setAlarmActive(true)
+    void playAlarmTone()
 
     if (alarmTimerRef.current) window.clearTimeout(alarmTimerRef.current)
     alarmTimerRef.current = window.setTimeout(() => {
       setAlarmActive(false)
+      stopAlarmTone()
     }, 4000)
   }
 
   function clearAlarm() {
     setAlarmActive(false)
+    stopAlarmTone()
     if (alarmTimerRef.current) window.clearTimeout(alarmTimerRef.current)
   }
 
@@ -174,22 +268,33 @@ function App() {
             {cameraState !== 'active' && (
               <div className="video-placeholder">
                 <Camera aria-hidden="true" />
-                <strong>{cameraState === 'starting' ? 'Opening camera...' : 'Camera preview off'}</strong>
+                <strong>
+                  {cameraState === 'starting'
+                    ? 'Opening camera...'
+                    : cameraState === 'error'
+                      ? 'Camera permission needed'
+                      : cameraState === 'unsupported'
+                        ? 'Camera APIs unavailable'
+                        : 'Camera preview off'}
+                </strong>
                 <span>
                   {cameraState === 'unsupported'
                     ? 'This browser does not expose camera APIs.'
+                    : cameraState === 'error'
+                      ? 'Use Retry Camera after adjusting browser permissions.'
                     : 'Start the camera or use the simulator path.'}
                 </span>
               </div>
             )}
           </div>
-          {errorMessage && <p className="error-note">Camera error: {errorMessage}</p>}
+          {errorMessage && <p className="error-note">{errorMessage}</p>}
           <div className="monitor-controls">
             <button type="button" onClick={stopCamera} disabled={cameraState !== 'active'}>
               Stop Camera
             </button>
-            <button type="button" onClick={triggerAlarm}>
-              Test Alarm
+            <button type="button" onClick={cameraState === 'error' ? startCamera : triggerAlarm}>
+              {cameraState === 'error' && <RotateCcw aria-hidden="true" />}
+              {cameraState === 'error' ? 'Retry Camera' : 'Test Alarm'}
             </button>
           </div>
         </aside>
@@ -212,6 +317,34 @@ function App() {
               </button>
             ))}
           </div>
+        </div>
+        <div className="audio-controls">
+          <span className="eyebrow">Audio Alarm</span>
+          <div className="audio-actions">
+            {audioState === 'off' || audioState === 'unsupported' ? (
+              <button type="button" onClick={enableAudioAlarm} disabled={audioState === 'unsupported'}>
+                <Volume2 aria-hidden="true" />
+                Enable Audio Alarm
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={audioState === 'muted' ? enableAudioAlarm : muteAudioAlarm}
+              >
+                {audioState === 'muted' ? <Volume2 aria-hidden="true" /> : <VolumeX aria-hidden="true" />}
+                {audioState === 'muted' ? 'Enable Audio Alarm' : 'Mute Audio Alarm'}
+              </button>
+            )}
+          </div>
+          <small>
+            {audioState === 'ready'
+              ? 'Audio alarm ready'
+              : audioState === 'muted'
+                ? 'Audio alarm muted'
+                : audioState === 'unsupported'
+                  ? 'Audio alarm unsupported in this browser'
+                  : 'Audio alarm off'}
+          </small>
         </div>
         <div className="stats">
           <span>Detections</span>
