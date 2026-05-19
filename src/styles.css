@@ -1,0 +1,435 @@
+:root {
+  color: #16201b;
+  background: #f7f3e8;
+  font-family:
+    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+}
+
+button {
+  border: 0;
+  font: inherit;
+}
+
+.app-shell {
+  min-height: 100vh;
+  padding: 32px;
+  background:
+    radial-gradient(circle at top left, rgba(249, 247, 46, 0.26), transparent 28rem),
+    linear-gradient(135deg, #f7f3e8 0%, #eef5ed 48%, #f8ebe3 100%);
+}
+
+.hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(380px, 0.82fr);
+  gap: 28px;
+  align-items: stretch;
+  max-width: 1180px;
+  margin: 0 auto;
+}
+
+.hero-copy,
+.monitor-panel,
+.control-strip,
+.feature-grid article,
+.qa-path {
+  border: 1px solid rgba(22, 32, 27, 0.12);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.76);
+  box-shadow: 0 24px 70px rgba(24, 42, 32, 0.12);
+}
+
+.hero-copy {
+  padding: clamp(32px, 6vw, 72px);
+}
+
+.definition {
+  display: inline-flex;
+  max-width: 100%;
+  padding: 10px 14px;
+  border-radius: 999px;
+  background: #f9f72e;
+  color: #8b1e73;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+h1,
+h2,
+p {
+  margin-top: 0;
+}
+
+h1 {
+  max-width: 780px;
+  margin-bottom: 20px;
+  color: #17251e;
+  font-size: clamp(3rem, 8vw, 6.7rem);
+  line-height: 0.92;
+  letter-spacing: 0;
+}
+
+.hero-copy > p:not(.definition) {
+  max-width: 680px;
+  margin-bottom: 28px;
+  color: #46564c;
+  font-size: 1.18rem;
+  line-height: 1.7;
+}
+
+.hero-actions,
+.monitor-controls,
+.mode-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.primary-action,
+.secondary-action,
+.monitor-controls button,
+.mode-options button,
+.alarm-overlay button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 46px;
+  padding: 0 18px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 800;
+  transition:
+    transform 160ms ease,
+    box-shadow 160ms ease,
+    background-color 160ms ease;
+}
+
+.primary-action {
+  background: #17251e;
+  color: #fffdf4;
+  box-shadow: 0 12px 24px rgba(23, 37, 30, 0.2);
+}
+
+.secondary-action,
+.monitor-controls button,
+.mode-options button {
+  background: #fffdf4;
+  color: #17251e;
+  border: 1px solid rgba(23, 37, 30, 0.14);
+}
+
+.primary-action:hover,
+.secondary-action:hover,
+.monitor-controls button:not(:disabled):hover,
+.mode-options button:hover,
+.alarm-overlay button:hover {
+  transform: translateY(-1px);
+}
+
+.monitor-panel {
+  display: flex;
+  flex-direction: column;
+  padding: 18px;
+}
+
+.monitor-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 28px;
+  margin-bottom: 14px;
+  color: #46564c;
+  font-weight: 800;
+}
+
+.status-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
+  background: #adb6ae;
+}
+
+.status-dot--active {
+  background: #2fa66a;
+  box-shadow: 0 0 0 6px rgba(47, 166, 106, 0.14);
+}
+
+.status-dot--starting {
+  background: #d9962e;
+}
+
+.status-dot--error,
+.status-dot--unsupported {
+  background: #c7473a;
+}
+
+.video-frame {
+  position: relative;
+  display: grid;
+  flex: 1;
+  min-height: 360px;
+  overflow: hidden;
+  border-radius: 8px;
+  background:
+    linear-gradient(120deg, rgba(23, 37, 30, 0.92), rgba(46, 62, 52, 0.9)),
+    repeating-linear-gradient(45deg, #26342c 0 12px, #1d2a23 12px 24px);
+}
+
+.video-frame video,
+.video-placeholder {
+  grid-area: 1 / 1;
+}
+
+.video-frame video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.video-placeholder {
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 10px;
+  padding: 28px;
+  color: #fffdf4;
+  text-align: center;
+}
+
+.video-placeholder svg {
+  width: 52px;
+  height: 52px;
+  color: #f9f72e;
+}
+
+.video-placeholder span,
+.error-note,
+.qa-path p,
+.feature-grid p,
+.stats small {
+  color: #5e6b62;
+  line-height: 1.55;
+}
+
+.error-note {
+  margin: 14px 0 0;
+  color: #9c2f25;
+  font-weight: 700;
+}
+
+.monitor-controls {
+  margin-top: 14px;
+}
+
+.monitor-controls button:disabled {
+  cursor: not-allowed;
+  opacity: 0.48;
+}
+
+.control-strip {
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  max-width: 1180px;
+  margin: 28px auto;
+  padding: 22px;
+}
+
+.eyebrow {
+  display: block;
+  margin-bottom: 10px;
+  color: #738076;
+  font-size: 0.78rem;
+  font-weight: 900;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.mode-options button.is-selected {
+  background: #f9f72e;
+  color: #8b1e73;
+  border-color: transparent;
+}
+
+.stats {
+  display: grid;
+  min-width: 160px;
+  gap: 4px;
+}
+
+.stats span {
+  color: #738076;
+  font-size: 0.85rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.stats strong {
+  color: #17251e;
+  font-size: 2.6rem;
+  line-height: 1;
+}
+
+.feature-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+  max-width: 1180px;
+  margin: 0 auto;
+}
+
+.feature-grid article {
+  padding: 24px;
+}
+
+.feature-grid svg,
+.qa-path svg {
+  width: 30px;
+  height: 30px;
+  color: #8b1e73;
+}
+
+.feature-grid h2,
+.qa-path h2 {
+  margin: 16px 0 8px;
+  color: #17251e;
+  font-size: 1.15rem;
+}
+
+.qa-path {
+  display: flex;
+  gap: 16px;
+  max-width: 1180px;
+  margin: 18px auto 0;
+  padding: 22px;
+}
+
+.qa-path h2,
+.qa-path p {
+  margin-bottom: 0;
+}
+
+.alarm-overlay {
+  position: fixed;
+  z-index: 10;
+  top: 20px;
+  left: 50%;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: min(calc(100% - 32px), 720px);
+  padding: 16px;
+  border: 3px solid #fffdf4;
+  border-radius: 8px;
+  color: #fffdf4;
+  transform: translateX(-50%);
+  box-shadow: 0 24px 60px rgba(23, 37, 30, 0.3);
+  animation: alarm-pulse 700ms infinite alternate;
+}
+
+.alarm-overlay--classic {
+  background: #c7473a;
+}
+
+.alarm-overlay--coach {
+  background: #8b1e73;
+}
+
+.alarm-overlay--silent {
+  background: #17251e;
+  animation: none;
+}
+
+.alarm-overlay svg {
+  flex: 0 0 auto;
+  width: 36px;
+  height: 36px;
+}
+
+.alarm-overlay div {
+  display: grid;
+  flex: 1;
+  gap: 2px;
+}
+
+.alarm-overlay strong {
+  font-size: 1rem;
+}
+
+.alarm-overlay span {
+  opacity: 0.84;
+}
+
+.alarm-overlay button {
+  background: #fffdf4;
+  color: #17251e;
+}
+
+@keyframes alarm-pulse {
+  from {
+    outline: 0 solid rgba(199, 71, 58, 0.2);
+  }
+  to {
+    outline: 12px solid rgba(199, 71, 58, 0.2);
+  }
+}
+
+@media (max-width: 900px) {
+  .app-shell {
+    padding: 16px;
+  }
+
+  .hero,
+  .feature-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .monitor-panel {
+    min-height: 460px;
+  }
+
+  .control-strip {
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 520px) {
+  .hero-copy,
+  .monitor-panel,
+  .control-strip,
+  .feature-grid article,
+  .qa-path {
+    border-radius: 6px;
+  }
+
+  .hero-copy {
+    padding: 24px;
+  }
+
+  .hero-actions button,
+  .mode-options button,
+  .monitor-controls button {
+    width: 100%;
+  }
+
+  .video-frame {
+    min-height: 300px;
+  }
+
+  .qa-path {
+    display: block;
+  }
+}
